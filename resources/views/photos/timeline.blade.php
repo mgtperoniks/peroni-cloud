@@ -3,6 +3,23 @@
         Timeline
     </x-slot>
 
+    <div class="fixed top-20 right-4 z-50 flex items-center gap-2">
+        <form action="{{ route('photos.timeline') }}" method="GET"
+            class="flex items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800">
+            <input type="date" name="jump_date" value="{{ request('jump_date') }}"
+                class="border-0 bg-transparent text-xs font-bold text-slate-700 dark:text-white focus:ring-0 p-1">
+            <button type="submit" class="bg-primary text-white p-2 rounded-xl hover:bg-primary/90 transition-colors">
+                <span class="material-symbols-outlined text-sm">calendar_month</span>
+            </button>
+            @if(request('jump_date'))
+                <a href="{{ route('photos.timeline') }}"
+                    class="bg-slate-100 text-slate-500 p-2 rounded-xl hover:bg-slate-200 transition-colors">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                </a>
+            @endif
+        </form>
+    </div>
+
     <div class="p-6 pt-8 max-w-5xl mx-auto">
         @if($groupedPhotos->isEmpty())
             <div class="flex flex-col items-center justify-center py-32 text-slate-300">
@@ -64,4 +81,17 @@
         <!-- Bottom Padding -->
         <div class="h-32"></div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        @if(session('swal_error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: '{{ session('swal_error') }}',
+                confirmButtonColor: '#0ea5e9',
+                background: document.documentElement.classList.contains('dark') ? '#1e293b' : '#fff',
+                color: document.documentElement.classList.contains('dark') ? '#fff' : '#0f172a'
+            });
+        @endif
+    </script>
 </x-app-layout>

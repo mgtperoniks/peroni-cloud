@@ -106,7 +106,7 @@ class PhotoController extends Controller
         return redirect()->route('photos.index')->with('status', 'photos-uploaded');
     }
 
-    public function timeline()
+    public function timeline(Request $request)
     {
         $user = auth()->user();
         $query = Photo::query();
@@ -122,12 +122,30 @@ class PhotoController extends Controller
             'sales' => 'Sales',
         ];
 
-        // Filter based on Role if not Global Admin
-        if (!in_array($user->role, ['direktur', 'mr'])) {
-            if (isset($roleMap[$user->role])) {
-                $query->where('department', $roleMap[$user->role]);
+        $applyScope = function ($q) use ($user, $roleMap) {
+            // Filter based on Role if not Global Admin
+            if (!in_array($user->role, ['direktur', 'mr'])) {
+                if (isset($roleMap[$user->role])) {
+                    $q->where('department', $roleMap[$user->role]);
+                } else {
+                    $q->where('department', $user->role);
+                }
+            }
+        };
+
+        $applyScope($query);
+
+        // Date Jump Logic
+        if ($request->filled('jump_date')) {
+            // Check existence first
+            $checkQuery = Photo::query();
+            $applyScope($checkQuery);
+            $exists = $checkQuery->whereDate('photo_date', $request->jump_date)->exists();
+
+            if ($exists) {
+                $query->whereDate('photo_date', $request->jump_date);
             } else {
-                $query->where('department', $user->role);
+                session()->flash('swal_error', 'Tidak ada foto pada tanggal ' . \Carbon\Carbon::parse($request->jump_date)->format('d M Y'));
             }
         }
 

@@ -20,6 +20,7 @@ services:
     image: mysql:8.0
     container_name: peroni_cloud_db
     restart: unless-stopped
+    env_file: .env
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}

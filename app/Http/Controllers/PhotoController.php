@@ -15,6 +15,29 @@ class PhotoController extends Controller
     {
         $query = Photo::with('user')->orderBy('photo_date', 'desc')->orderBy('created_at', 'desc');
 
+        $user = auth()->user();
+
+        // Role to Department Mapping
+        $roleMap = [
+            'adminppic' => 'PPIC',
+            'adminqcfitting' => 'QC Fitting',
+            'adminqcflange' => 'QC Flange',
+            'qcinspektorpd' => 'QC Inspektor PD',
+            'qcinspectorfl' => 'QC Inspector FL',
+            'admink3' => 'K3',
+            'sales' => 'Sales',
+        ];
+
+        // Filter based on Role if not Global Admin
+        if (!in_array($user->role, ['direktur', 'mr'])) {
+            if (isset($roleMap[$user->role])) {
+                $query->where('department', $roleMap[$user->role]);
+            } else {
+                // strict fallback or allow seeing their own specific textual role
+                $query->where('department', $user->role);
+            }
+        }
+
         if ($request->filled('location')) {
             $query->where('location', $request->location);
         }
@@ -59,13 +82,13 @@ class PhotoController extends Controller
 
                 // Generate Thumbnail (Compressed)
                 $thumbnailPath = 'thumbnails/' . basename($path);
-                
+
                 $imageManager = \Intervention\Image\Laravel\Facades\Image::read($file);
-                
+
                 // Resize to max 800px width/height maintaining aspect ratio
                 // And encode as JPG with 60% quality to get roughly 300-400KB or less
                 $thumbnail = $imageManager->scale(width: 800)->toJpeg(60);
-                
+
                 Storage::disk('public')->put($thumbnailPath, (string) $thumbnail);
 
                 Photo::create([
@@ -82,6 +105,41 @@ class PhotoController extends Controller
 
         return redirect()->route('photos.index')->with('status', 'photos-uploaded');
     }
+
+    public function timeline()
+    {
+        $user = auth()->user();
+        $query = Photo::query();
+
+        // Role to Department Mapping (Same as index)
+        $roleMap = [
+            'adminppic' => 'PPIC',
+            'adminqcfitting' => 'QC Fitting',
+            'adminqcflange' => 'QC Flange',
+            'qcinspektorpd' => 'QC Inspektor PD',
+            'qcinspectorfl' => 'QC Inspector FL',
+            'admink3' => 'K3',
+            'sales' => 'Sales',
+        ];
+
+        // Filter based on Role if not Global Admin
+        if (!in_array($user->role, ['direktur', 'mr'])) {
+            if (isset($roleMap[$user->role])) {
+                $query->where('department', $roleMap[$user->role]);
+            } else {
+                $query->where('department', $user->role);
+            }
+        }
+
+        $query->orderBy('photo_date', 'desc')->orderBy('created_at', 'desc');
+
+        $groupedPhotos = $query->get()->groupBy(function ($photo) {
+            return \Carbon\Carbon::parse($photo->photo_date)->format('F, Y');
+        });
+
+        return view('photos.timeline', compact('groupedPhotos'));
+    }
+
 
     /**
      * Display the specified resource.

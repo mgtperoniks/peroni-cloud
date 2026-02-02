@@ -38,15 +38,24 @@
                     <form action="{{ route('photos.index') }}" method="GET">
                         <!-- Date Range -->
                         <section class="p-4 pt-6">
-                            <h3 class="text-[#111318] dark:text-white text-lg font-bold leading-tight mb-4 px-1">Date Selection</h3>
-                            <input type="date" name="date" value="{{ request('date') }}" class="w-full bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 rounded-xl h-14 px-4 font-medium">
+                            <h3 class="text-[#111318] dark:text-white text-lg font-bold leading-tight mb-4 px-1">Date Range</h3>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400 pl-1">From</label>
+                                    <input type="date" name="start_date" value="{{ request('start_date') }}" class="w-full bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 rounded-xl h-12 px-3 font-medium text-sm">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400 pl-1">To</label>
+                                    <input type="date" name="end_date" value="{{ request('end_date') }}" class="w-full bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 rounded-xl h-12 px-3 font-medium text-sm">
+                                </div>
+                            </div>
                         </section>
 
                         <!-- Location -->
                         <section class="p-4">
                             <h3 class="text-[#111318] dark:text-white text-lg font-bold leading-tight mb-4 px-1">Location</h3>
                             <div class="flex gap-3 flex-wrap">
-                                @foreach(['Production Line 1', 'Warehouse A', 'Shipping', 'Maintenance'] as $loc)
+                                @foreach(['Kantor', 'Bahan Baku', 'Cor Flange', 'Netto Flange', 'Produksi Bubut', 'Cetak/Cor Fitting', 'Netto Fitting', 'Gudang Jadi FL', 'Gudang Jadi PF', 'Aluminium', 'Produksi Besi', 'Satpam', 'Sparepart dan BP'] as $loc)
                                     <label class="cursor-pointer">
                                         <input type="radio" name="location" value="{{ $loc }}" class="hidden peer" {{ request('location') == $loc ? 'checked' : '' }}>
                                         <span class="flex h-11 items-center justify-center rounded-lg px-5 text-sm font-medium border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all">
@@ -61,7 +70,7 @@
                         <section class="p-4">
                             <h3 class="text-[#111318] dark:text-white text-lg font-bold leading-tight mb-4 px-1">Department</h3>
                             <div class="flex gap-3 flex-wrap">
-                                @foreach(['Production', 'Safety', 'Maintenance', 'Quality Control', 'Inspections', 'Damages'] as $dept)
+                                @foreach(['PPIC', 'QC Fitting', 'QC Flange', 'QC Inspektor PD', 'QC Inspector FL', 'K3', 'Sales'] as $dept)
                                     <label class="cursor-pointer">
                                         <input type="radio" name="department" value="{{ $dept }}" class="hidden peer" {{ request('department') == $dept ? 'checked' : '' }}>
                                         <span class="flex h-11 items-center justify-center rounded-lg px-5 text-sm font-medium border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all">
@@ -89,7 +98,7 @@
         <!-- Filter Pills / Categories -->
         <div class="flex gap-4 p-4 py-2 overflow-x-auto no-scrollbar bg-white dark:bg-background-dark/50 backdrop-blur-sm sticky top-14 z-20">
             <a href="{{ route('photos.index') }}" class="px-5 py-2 {{ !request('department') ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500' }} text-[10px] font-black uppercase tracking-widest rounded-xl whitespace-nowrap transition-all">All Gallery</a>
-            @foreach(['Production', 'Safety', 'Quality Control', 'Maintenance', 'Inspections', 'Damages'] as $cat)
+            @foreach(['PPIC', 'QC Fitting', 'QC Flange', 'QC Inspektor PD', 'QC Inspector FL', 'K3', 'Sales'] as $cat)
                 <a href="{{ route('photos.index', array_merge(request()->except('department'), ['department' => $cat])) }}" class="px-5 py-2 {{ request('department') == $cat ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500' }} text-[10px] font-black uppercase tracking-widest rounded-xl whitespace-nowrap transition-all">{{ $cat }}</a>
             @endforeach
         </div>

@@ -46,8 +46,12 @@ class PhotoController extends Controller
             $query->where('department', $request->department);
         }
 
-        if ($request->filled('date')) {
-            $query->whereDate('photo_date', $request->date);
+        if ($request->filled('start_date')) {
+            $query->whereDate('photo_date', '>=', $request->start_date);
+        }
+
+        if ($request->filled('end_date')) {
+            $query->whereDate('photo_date', '<=', $request->end_date);
         }
 
         $photos = $query->get();

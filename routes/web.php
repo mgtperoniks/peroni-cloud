@@ -22,3 +22,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__ . '/auth.php';
+
+// Temporary route for data migration
+Route::get('/dev/fix-locations', function () {
+    \App\Models\Photo::query()->update(['location' => 'Kantor']);
+    return 'All locations migrated to "Kantor". <a href="' . route('photos.index') . '">Back to Home</a>';
+});

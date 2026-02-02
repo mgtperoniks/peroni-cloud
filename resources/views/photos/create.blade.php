@@ -74,10 +74,19 @@
                     <select name="location" required
                         class="w-full rounded-2xl border-none bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-none h-16 px-6 font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 transition-all appearance-none">
                         <option disabled selected value="">Select location</option>
-                        <option value="Production Line 1">Production Line 1</option>
-                        <option value="Warehouse A">Warehouse A</option>
-                        <option value="Shipping">Shipping</option>
-                        <option value="Maintenance">Maintenance</option>
+                        <option value="Kantor">Kantor</option>
+                        <option value="Bahan Baku">Bahan Baku</option>
+                        <option value="Cor Flange">Cor Flange</option>
+                        <option value="Netto Flange">Netto Flange</option>
+                        <option value="Produksi Bubut">Produksi Bubut</option>
+                        <option value="Cetak/Cor Fitting">Cetak/Cor Fitting</option>
+                        <option value="Netto Fitting">Netto Fitting</option>
+                        <option value="Gudang Jadi FL">Gudang Jadi FL</option>
+                        <option value="Gudang Jadi PF">Gudang Jadi PF</option>
+                        <option value="Aluminium">Aluminium</option>
+                        <option value="Produksi Besi">Produksi Besi</option>
+                        <option value="Satpam">Satpam</option>
+                        <option value="Sparepart dan BP">Sparepart dan BP</option>
                     </select>
                 </div>
 

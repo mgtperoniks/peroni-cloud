@@ -10,7 +10,12 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     libzip-dev \
-    default-mysql-client
+    default-mysql-client \
+    gnupg
+
+# Install Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -27,11 +32,14 @@ WORKDIR /var/www
 # Copy existing application directory contents
 COPY . /var/www
 
-# Install dependencies
+# Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
+
+# Install Node dependencies and build
+RUN npm install && npm run build
 
 # Expose port
 EXPOSE 8000
 
-# Start command - REMOVED MIGRATION from here to prevent crashloop if DB is slow
+# Start command
 CMD php artisan serve --host=0.0.0.0 --port=8000

@@ -7,8 +7,9 @@
 
     <x-slot name="headerActions">
         <a href="{{ route('photos.index') }}"
-            class="flex size-10 items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-            <span class="material-symbols-outlined text-slate-800 dark:text-white">arrow_back</span>
+            class="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm ring-1 ring-inset ring-slate-200 dark:ring-slate-700 hover:bg-primary hover:text-white dark:hover:bg-primary transition-all group">
+            <span
+                class="material-symbols-outlined font-bold group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
         </a>
     </x-slot>
 
@@ -20,9 +21,26 @@
                 <div class="w-full bg-center bg-no-repeat bg-cover aspect-auto flex-1 transition-opacity duration-500"
                     style='background-image: url("{{ asset('storage/' . ($photo->thumbnail ?? $photo->filename)) }}");'>
                 </div>
+                <!-- Navigation Buttons -->
+                @if($next)
+                    <a href="{{ route('photos.show', $next) }}"
+                        class="absolute left-2 top-1/2 -translate-y-1/2 p-4 rounded-full bg-black/20 hover:bg-black/50 text-white backdrop-blur-[2px] transition-all active:scale-95 group z-10">
+                        <span
+                            class="material-symbols-outlined text-3xl group-hover:-translate-x-1 transition-transform">chevron_left</span>
+                    </a>
+                @endif
+
+                @if($previous)
+                    <a href="{{ route('photos.show', $previous) }}"
+                        class="absolute right-2 top-1/2 -translate-y-1/2 p-4 rounded-full bg-black/20 hover:bg-black/50 text-white backdrop-blur-[2px] transition-all active:scale-95 group z-10">
+                        <span
+                            class="material-symbols-outlined text-3xl group-hover:translate-x-1 transition-transform">chevron_right</span>
+                    </a>
+                @endif
+
                 <!-- Zoom Button Overlay -->
                 <a href="{{ asset('storage/' . $photo->filename) }}" target="_blank"
-                    class="absolute bottom-4 right-4 bg-black/50 backdrop-blur-sm text-white p-2 rounded-lg flex items-center justify-center cursor-pointer shadow-lg">
+                    class="absolute bottom-4 right-4 bg-black/50 backdrop-blur-sm text-white p-2 rounded-lg flex items-center justify-center cursor-pointer shadow-lg z-20">
                     <span class="material-symbols-outlined text-xl">zoom_out_map</span>
                 </a>
             </div>
@@ -97,7 +115,8 @@
                         class="text-slate-500 dark:text-gray-400 text-sm font-semibold uppercase tracking-widest text-[10px]">
                         Photo Date</p>
                     <p class="text-slate-900 dark:text-white text-sm font-bold">
-                        {{ \Carbon\Carbon::parse($photo->photo_date)->format('M d, Y') }}</p>
+                        {{ \Carbon\Carbon::parse($photo->photo_date)->format('M d, Y') }}
+                    </p>
                 </div>
                 <div class="flex justify-between gap-x-6 py-4">
                     <p

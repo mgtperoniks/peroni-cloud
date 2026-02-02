@@ -146,7 +146,52 @@ class PhotoController extends Controller
      */
     public function show(Photo $photo)
     {
-        return view('photos.show', compact('photo'));
+        $user = auth()->user();
+
+        // Helper to apply role constraints
+        $applyScope = function ($query) use ($user) {
+            $roleMap = [
+                'adminppic' => 'PPIC',
+                'adminqcfitting' => 'QC Fitting',
+                'adminqcflange' => 'QC Flange',
+                'qcinspektorpd' => 'QC Inspektor PD',
+                'qcinspectorfl' => 'QC Inspector FL',
+                'admink3' => 'K3',
+                'sales' => 'Sales',
+            ];
+
+            if (!in_array($user->role, ['direktur', 'mr'])) {
+                if (isset($roleMap[$user->role])) {
+                    $query->where('department', $roleMap[$user->role]);
+                } else {
+                    $query->where('department', $user->role);
+                }
+            }
+        };
+
+        // Previous Photo (Newer)
+        $previous = Photo::query();
+        $applyScope($previous);
+        $previous = $previous->where(function ($q) use ($photo) {
+            $q->where('photo_date', '>', $photo->photo_date)
+                ->orWhere(function ($sub) use ($photo) {
+                    $sub->where('photo_date', $photo->photo_date)
+                        ->where('created_at', '>', $photo->created_at);
+                });
+        })->orderBy('photo_date', 'asc')->orderBy('created_at', 'asc')->first();
+
+        // Next Photo (Older)
+        $next = Photo::query();
+        $applyScope($next);
+        $next = $next->where(function ($q) use ($photo) {
+            $q->where('photo_date', '<', $photo->photo_date)
+                ->orWhere(function ($sub) use ($photo) {
+                    $sub->where('photo_date', $photo->photo_date)
+                        ->where('created_at', '<', $photo->created_at);
+                });
+        })->orderBy('photo_date', 'desc')->orderBy('created_at', 'desc')->first();
+
+        return view('photos.show', compact('photo', 'previous', 'next'));
     }
 
     /**

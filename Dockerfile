@@ -27,11 +27,11 @@ WORKDIR /var/www
 # Copy existing application directory contents
 COPY . /var/www
 
-# Install dependencies (will be overridden by volume in dev but useful for build)
+# Install dependencies
 RUN composer install --no-dev --optimize-autoloader
 
 # Expose port
 EXPOSE 8000
 
-# Start command
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000
+# Start command - REMOVED MIGRATION from here to prevent crashloop if DB is slow
+CMD php artisan serve --host=0.0.0.0 --port=8000

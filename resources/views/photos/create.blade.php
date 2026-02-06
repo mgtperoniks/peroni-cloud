@@ -105,6 +105,13 @@
                         <option value="QC Inspector FL">QC Inspector FL</option>
                         <option value="K3">K3</option>
                         <option value="Sales">Sales</option>
+                        <option value="Sparepart">Sparepart</option>
+                        @if(auth()->user()->role == 'mr')
+                            <option value="MR">MR</option>
+                        @endif
+                        @if(auth()->user()->role == 'direktur')
+                            <option value="Direktur">Direktur</option>
+                        @endif
                     </select>
                 </div>
 

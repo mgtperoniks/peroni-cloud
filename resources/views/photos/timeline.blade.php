@@ -3,22 +3,26 @@
         Timeline
     </x-slot>
 
-    <div class="fixed top-20 right-4 z-50 flex items-center gap-2">
+    <x-slot name="headerActions">
         <form action="{{ route('photos.timeline') }}" method="GET"
-            class="flex items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800">
-            <input type="date" name="jump_date" value="{{ request('jump_date') }}"
-                class="border-0 bg-transparent text-xs font-bold text-slate-700 dark:text-white focus:ring-0 p-1">
-            <button type="submit" class="bg-primary text-white p-2 rounded-xl hover:bg-primary/90 transition-colors">
-                <span class="material-symbols-outlined text-sm">calendar_month</span>
+            class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 p-1.5 rounded-2xl border border-slate-100 dark:border-slate-700 transition-all">
+            <div class="flex items-center pl-2">
+                <span class="material-symbols-outlined text-slate-400 text-sm">calendar_today</span>
+                <input type="date" name="jump_date" value="{{ request('jump_date') }}"
+                    class="border-0 bg-transparent text-[10px] font-bold text-slate-700 dark:text-white focus:ring-0 p-1 w-28">
+            </div>
+            <button type="submit" class="bg-primary text-white h-9 px-4 rounded-xl hover:bg-primary/90 transition-all text-[10px] font-black uppercase tracking-wider shadow-md shadow-primary/10 flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-base">search</span>
+                <span class="hidden sm:inline">Loncati</span>
             </button>
             @if(request('jump_date'))
                 <a href="{{ route('photos.timeline') }}"
-                    class="bg-slate-100 text-slate-500 p-2 rounded-xl hover:bg-slate-200 transition-colors">
-                    <span class="material-symbols-outlined text-sm">close</span>
+                    class="bg-white dark:bg-slate-700 text-slate-500 h-9 w-9 flex items-center justify-center rounded-xl hover:bg-slate-100 transition-colors">
+                    <span class="material-symbols-outlined text-base">close</span>
                 </a>
             @endif
         </form>
-    </div>
+    </x-slot>
 
     <div class="p-6 pt-8 max-w-5xl mx-auto">
         @if($groupedPhotos->isEmpty())
@@ -81,7 +85,7 @@
         <!-- Bottom Padding -->
         <div class="h-32"></div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ asset('vendor/sweetalert2/sweetalert2.all.min.js') }}"></script>
     <script>
         @if(session('swal_error'))
             Swal.fire({

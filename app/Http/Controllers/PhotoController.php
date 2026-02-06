@@ -26,6 +26,7 @@ class PhotoController extends Controller
             'qcinspectorfl' => 'QC Inspector FL',
             'admink3' => 'K3',
             'sales' => 'Sales',
+            'adminsparepart' => 'Sparepart',
         ];
 
         // Filter based on Role if not Global Admin
@@ -54,9 +55,15 @@ class PhotoController extends Controller
             $query->whereDate('photo_date', '<=', $request->end_date);
         }
 
-        $photos = $query->get();
+        if ($request->filled('search')) {
+            $query->where('notes', 'like', '%' . $request->search . '%');
+        }
 
-        return view('photos.index', compact('photos'));
+        $photos = $query->get();
+        $allDepartments = Photo::distinct()->pluck('department')->sort();
+        $isGlobalAdmin = in_array($user->role, ['direktur', 'mr']);
+
+        return view('photos.index', compact('photos', 'allDepartments', 'isGlobalAdmin'));
     }
 
     /**
@@ -124,6 +131,7 @@ class PhotoController extends Controller
             'qcinspectorfl' => 'QC Inspector FL',
             'admink3' => 'K3',
             'sales' => 'Sales',
+            'adminsparepart' => 'Sparepart',
         ];
 
         $applyScope = function ($q) use ($user, $roleMap) {
@@ -180,6 +188,7 @@ class PhotoController extends Controller
                 'qcinspectorfl' => 'QC Inspector FL',
                 'admink3' => 'K3',
                 'sales' => 'Sales',
+                'adminsparepart' => 'Sparepart',
             ];
 
             if (!in_array($user->role, ['direktur', 'mr'])) {

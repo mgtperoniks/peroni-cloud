@@ -161,7 +161,12 @@
                                 <p class="text-slate-900 dark:text-white text-sm font-bold leading-tight truncate group-hover:text-primary transition-colors">{{ $photo->location }}</p>
                                 <div class="flex items-center justify-between mt-1 pt-1 border-t border-slate-50 dark:border-gray-800">
                                     <p class="text-slate-400 dark:text-gray-500 text-[9px] font-black uppercase tracking-widest">{{ \Carbon\Carbon::parse($photo->photo_date)->format('d M y') }}</p>
-                                    <p class="text-slate-400 dark:text-gray-500 text-[9px] font-bold">{{ $photo->user->name }}</p>
+                                    <div class="flex flex-col items-end">
+                                        <p class="text-slate-400 dark:text-gray-500 text-[9px] font-bold">{{ $photo->user->name }}</p>
+                                        @if($photo->folder && (auth()->id() == $photo->folder->user_id || in_array(auth()->user()->role, ['direktur', 'mr'])))
+                                <p class="text-primary text-[7px] font-black uppercase tracking-tighter">{{ $photo->folder->name }}</p>
+                            @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>

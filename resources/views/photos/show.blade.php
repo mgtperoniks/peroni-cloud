@@ -13,7 +13,7 @@
         </a>
     </x-slot>
 
-    <main x-data="{ showDownloadOptions: false }"
+    <main x-data="{ showDownloadOptions: false, showEditModal: false }"
         class="flex flex-col md:flex-row md:h-[calc(100vh-73px)] md:overflow-hidden bg-white dark:bg-background-dark">
         <!-- Left Column: Image Viewer -->
         <div
@@ -69,14 +69,16 @@
                                 class="text-slate-500 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest">
                                 Photo Date</p>
                             <p class="text-slate-900 dark:text-white text-sm font-bold">
-                                {{ \Carbon\Carbon::parse($photo->photo_date)->format('M d, Y') }}</p>
+                                {{ \Carbon\Carbon::parse($photo->photo_date)->format('M d, Y') }}
+                            </p>
                         </div>
                         <div class="flex justify-between items-center p-4">
                             <p
                                 class="text-slate-500 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest">
                                 Location</p>
                             <p class="text-slate-900 dark:text-white text-sm font-bold text-right">
-                                {{ $photo->location }}</p>
+                                {{ $photo->location }}
+                            </p>
                         </div>
                         <div class="flex justify-between items-center p-4">
                             <p
@@ -110,6 +112,22 @@
                                 "{{ $photo->notes ?: 'No specific observations recorded for this documentation.' }}"
                             </p>
                         </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="space-y-4 pt-4">
+                        <div class="flex items-center">
+                            <span
+                                class="material-symbols-outlined text-primary mr-3 text-2xl font-bold">edit_note</span>
+                            <h3
+                                class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight uppercase tracking-[0.1em]">
+                                Actions</h3>
+                        </div>
+                        <button @click="showEditModal = true"
+                            class="w-full flex items-center justify-center gap-3 bg-slate-900 dark:bg-primary text-white font-bold py-4 rounded-2xl hover:opacity-90 transition-all active:scale-[0.98] shadow-lg">
+                            <span class="material-symbols-outlined">edit</span>
+                            <span class="text-xs uppercase tracking-widest">Edit Information</span>
+                        </button>
                     </div>
 
                     <!-- Danger Zone -->
@@ -196,5 +214,90 @@
                     class="w-full mt-6 py-4 text-sm font-black uppercase tracking-widest text-slate-400">Cancel</button>
             </div>
         </div>
+
+        <!-- Edit Metadata Modal -->
+        <template x-teleport="body">
+            <div x-show="showEditModal" x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100"
+                x-transition:leave-end="opacity-0 scale-95"
+                class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md"
+                x-cloak>
+                <div @click.away="showEditModal = false"
+                    class="bg-white dark:bg-slate-900 rounded-[32px] p-8 w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+                    <div class="flex items-center justify-between mb-8">
+                        <h3 class="text-2xl font-bold">Edit Information</h3>
+                        <button @click="showEditModal = false" class="text-slate-400 hover:text-slate-600">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+
+                    <form action="{{ route('photos.update', $photo) }}" method="POST" class="space-y-6">
+                        @csrf
+                        @method('PATCH')
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Date -->
+                            <div class="flex flex-col gap-2">
+                                <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 pl-2">Photo Date</label>
+                                <input type="date" name="photo_date" value="{{ \Carbon\Carbon::parse($photo->photo_date)->format('Y-m-d') }}" required
+                                    class="w-full h-14 rounded-2xl border-none bg-slate-50 dark:bg-slate-800 px-6 font-bold focus:ring-2 focus:ring-primary/50 transition-all">
+                            </div>
+
+                            <!-- Folder -->
+                            <div class="flex flex-col gap-2">
+                                <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 pl-2">Folder</label>
+                                <select name="folder_id"
+                                    class="w-full h-14 rounded-2xl border-none bg-slate-50 dark:bg-slate-800 px-6 font-bold focus:ring-2 focus:ring-primary/50 transition-all appearance-none">
+                                    <option value="">No Folder</option>
+                                    @foreach($folders as $f)
+                                        <option value="{{ $f->id }}" {{ $photo->folder_id == $f->id ? 'selected' : '' }}>{{ $f->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Location -->
+                        <div class="flex flex-col gap-2">
+                            <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 pl-2">Location</label>
+                            <input type="text" name="location" value="{{ $photo->location }}" required
+                                class="w-full h-14 rounded-2xl border-none bg-slate-50 dark:bg-slate-800 px-6 font-bold focus:ring-2 focus:ring-primary/50 transition-all">
+                        </div>
+
+                        <!-- Department -->
+                        <div class="flex flex-col gap-2">
+                            <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 pl-2">Department</label>
+                            <select name="department" required
+                                class="w-full h-14 rounded-2xl border-none bg-slate-50 dark:bg-slate-800 px-6 font-bold focus:ring-2 focus:ring-primary/50 transition-all appearance-none">
+                                <option value="PPIC" {{ $photo->department == 'PPIC' ? 'selected' : '' }}>PPIC</option>
+                                <option value="QC Fitting" {{ $photo->department == 'QC Fitting' ? 'selected' : '' }}>QC Fitting</option>
+                                <option value="QC Flange" {{ $photo->department == 'QC Flange' ? 'selected' : '' }}>QC Flange</option>
+                                <option value="QC Inspektor PD" {{ $photo->department == 'QC Inspektor PD' ? 'selected' : '' }}>QC Inspektor PD</option>
+                                <option value="QC Inspector FL" {{ $photo->department == 'QC Inspector FL' ? 'selected' : '' }}>QC Inspector FL</option>
+                                <option value="K3" {{ $photo->department == 'K3' ? 'selected' : '' }}>K3</option>
+                                <option value="Sales" {{ $photo->department == 'Sales' ? 'selected' : '' }}>Sales</option>
+                                <option value="Sparepart" {{ $photo->department == 'Sparepart' ? 'selected' : '' }}>Sparepart</option>
+                                <option value="MR" {{ $photo->department == 'MR' ? 'selected' : '' }}>MR</option>
+                                <option value="Direktur" {{ $photo->department == 'Direktur' ? 'selected' : '' }}>Direktur</option>
+                            </select>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="flex flex-col gap-2">
+                            <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 pl-2">Analysis Notes</label>
+                            <textarea name="notes" rows="4"
+                                class="w-full rounded-2xl border-none bg-slate-50 dark:bg-slate-800 p-6 font-medium focus:ring-2 focus:ring-primary/50 transition-all">{{ $photo->notes }}</textarea>
+                        </div>
+
+                        <div class="flex gap-4 pt-4">
+                            <button type="button" @click="showEditModal = false"
+                                class="flex-1 h-16 rounded-2xl border border-slate-200 dark:border-slate-700 font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest text-xs">Cancel</button>
+                            <button type="submit"
+                                class="flex-[2] h-16 rounded-2xl bg-primary text-white font-bold shadow-lg shadow-primary/20 uppercase tracking-widest text-xs">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </template>
     </main>
 </x-app-layout>

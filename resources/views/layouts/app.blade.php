@@ -78,7 +78,27 @@
         </header>
 
         <!-- Page Content -->
-        <main class="flex-1 overflow-y-auto">
+        <main class="flex-1 overflow-y-auto relative">
+            @if (session('status'))
+                <div class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-md">
+                    <div
+                        class="bg-primary/95 backdrop-blur-md text-white px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
+                        <span class="material-symbols-outlined filled-icon">check_circle</span>
+                        <p class="text-xs font-bold uppercase tracking-widest">{{ session('status') }}</p>
+                    </div>
+                </div>
+            @endif
+
+            @if (session('swal_error'))
+                <div class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-md">
+                    <div
+                        class="bg-red-500/95 backdrop-blur-md text-white px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
+                        <span class="material-symbols-outlined filled-icon">error</span>
+                        <p class="text-xs font-bold uppercase tracking-widest">{{ session('swal_error') }}</p>
+                    </div>
+                </div>
+            @endif
+
             {{ $slot }}
         </main>
 
@@ -86,6 +106,7 @@
             <x-bottom-nav />
         @endempty
     </div>
+    @stack('scripts')
 </body>
 
 </html>

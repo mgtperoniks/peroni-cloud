@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Photo;
+use App\Models\Folder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -13,7 +14,7 @@ class PhotoController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Photo::with('user')->orderBy('photo_date', 'desc')->orderBy('created_at', 'desc');
+        $query = Photo::with(['user', 'folder'])->orderBy('photo_date', 'desc')->orderBy('created_at', 'desc');
 
         $user = auth()->user();
 
@@ -71,7 +72,14 @@ class PhotoController extends Controller
      */
     public function create()
     {
-        return view('photos.create');
+        $folderQuery = Folder::orderBy('name');
+
+        if (!in_array(auth()->user()->role, ['direktur', 'mr'])) {
+            $folderQuery->where('user_id', auth()->id());
+        }
+
+        $folders = $folderQuery->get();
+        return view('photos.create', compact('folders'));
     }
 
     /**
@@ -79,38 +87,65 @@ class PhotoController extends Controller
      */
     public function store(Request $request)
     {
+        // Increase memory limit for processing large iPhone photos
+        ini_set('memory_limit', '1024M');
+
         $request->validate([
             'photos.*' => 'required|image|max:10240',
             'photo_date' => 'required|date',
             'location' => 'required|string',
             'department' => 'required|string',
+            'folder_id' => 'nullable|exists:folders,id',
         ]);
+
+        if ($request->folder_id) {
+            $targetFolder = Folder::find($request->folder_id);
+            if (!in_array(auth()->user()->role, ['direktur', 'mr']) && $targetFolder->user_id !== auth()->id()) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('swal_error', 'Anda tidak memiliki akses ke folder yang dipilih.');
+            }
+        }
 
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $file) {
-                // Store Original High-Res
-                $path = $file->store('photos', 'public');
+                try {
+                    // Store Original High-Res
+                    $path = $file->store('photos', 'public');
 
-                // Generate Thumbnail (Compressed)
-                $thumbnailPath = 'thumbnails/' . basename($path);
+                    // Generate Thumbnail (Compressed)
+                    $thumbnailPath = 'thumbnails/' . basename($path);
 
-                $imageManager = \Intervention\Image\Laravel\Facades\Image::read($file);
+                    $imageManager = \Intervention\Image\Laravel\Facades\Image::read($file);
 
-                // Resize to max 800px width/height maintaining aspect ratio
-                // And encode as JPG with 60% quality to get roughly 300-400KB or less
-                $thumbnail = $imageManager->scale(width: 800)->toJpeg(60);
+                    // Resize to max 800px width/height maintaining aspect ratio
+                    // And encode as JPG with 60% quality to get roughly 300-400KB or less
+                    $thumbnail = $imageManager->scale(width: 800)->toJpeg(60);
 
-                Storage::disk('public')->put($thumbnailPath, (string) $thumbnail);
+                    Storage::disk('public')->put($thumbnailPath, (string) $thumbnail);
 
-                Photo::create([
-                    'user_id' => auth()->id(),
-                    'filename' => $path,
-                    'thumbnail' => $thumbnailPath,
-                    'photo_date' => $request->photo_date,
-                    'location' => $request->location,
-                    'department' => $request->department,
-                    'notes' => $request->notes,
-                ]);
+                    Photo::create([
+                        'user_id' => auth()->id(),
+                        'filename' => $path,
+                        'thumbnail' => $thumbnailPath,
+                        'photo_date' => $request->photo_date,
+                        'location' => $request->location,
+                        'department' => $request->department,
+                        'notes' => $request->notes,
+                        'folder_id' => $request->folder_id,
+                    ]);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Photo Upload Error: ' . $e->getMessage(), [
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_size' => $file->getSize(),
+                        'mime_type' => $file->getMimeType(),
+                        'user_id' => auth()->id()
+                    ]);
+
+                    return redirect()->back()
+                        ->withInput()
+                        ->with('swal_error', 'Gagal memproses foto "' . $file->getClientOriginalName() . '". Pastikan format foto didukung (JPG/PNG/WebP) dan ukuran tidak terlalu besar.');
+                }
             }
         }
 
@@ -120,7 +155,7 @@ class PhotoController extends Controller
     public function timeline(Request $request)
     {
         $user = auth()->user();
-        $query = Photo::query();
+        $query = Photo::with(['user', 'folder']);
 
         // Role to Department Mapping (Same as index)
         $roleMap = [
@@ -222,7 +257,41 @@ class PhotoController extends Controller
                 });
         })->orderBy('photo_date', 'desc')->orderBy('created_at', 'desc')->first();
 
-        return view('photos.show', compact('photo', 'previous', 'next'));
+        $folderQuery = \App\Models\Folder::orderBy('name');
+        if (!in_array($user->role, ['direktur', 'mr'])) {
+            $folderQuery->where('user_id', auth()->id());
+        }
+        $folders = $folderQuery->get();
+
+        return view('photos.show', compact('photo', 'previous', 'next', 'folders'));
+    }
+
+    public function update(Request $request, Photo $photo)
+    {
+        // Authorization
+        if ($photo->user_id !== auth()->id() && !in_array(auth()->user()->role, ['direktur', 'mr'])) {
+            abort(403);
+        }
+
+        $request->validate([
+            'photo_date' => 'required|date',
+            'location' => 'required|string',
+            'department' => 'required|string',
+            'folder_id' => 'nullable|exists:folders,id',
+            'notes' => 'nullable|string',
+        ]);
+
+        // Security check for folder
+        if ($request->folder_id) {
+            $targetFolder = \App\Models\Folder::find($request->folder_id);
+            if (!in_array(auth()->user()->role, ['direktur', 'mr']) && $targetFolder->user_id !== auth()->id()) {
+                return redirect()->back()->with('swal_error', 'Anda tidak memiliki akses ke folder yang dipilih.');
+            }
+        }
+
+        $photo->update($request->only(['photo_date', 'location', 'department', 'folder_id', 'notes']));
+
+        return redirect()->back()->with('status', 'photo-updated');
     }
 
     /**

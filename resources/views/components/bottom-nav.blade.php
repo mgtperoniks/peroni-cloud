@@ -24,15 +24,17 @@
         <p class="text-[10px] font-black leading-normal tracking-[0.1em] uppercase">Timeline</p>
     </a>
 
-    <div class="flex-1 flex flex-col items-center justify-center -mt-12">
-        <a href="{{ route('photos.create') }}"
-            class="flex items-center justify-center rounded-2xl size-14 bg-primary text-white shadow-2xl shadow-primary/40 hover:scale-110 active:scale-90 transition-all border-4 border-white dark:border-background-dark relative group">
-            <span class="material-symbols-outlined text-[32px]">add</span>
-            <div
-                class="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold py-1 px-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                NEW ENTRY</div>
-        </a>
-    </div>
+    <a href="{{ route('folders.index') }}"
+        class="flex flex-1 flex-col items-center justify-center gap-1.5 transition-all duration-300 {{ request()->routeIs('folders.*') ? 'text-primary scale-110' : 'text-slate-400 hover:text-slate-600' }}">
+        <div class="relative">
+            <span
+                class="material-symbols-outlined text-[28px] {{ request()->routeIs('folders.*') ? 'filled-icon' : '' }}">folder_open</span>
+            @if(request()->routeIs('folders.*'))
+                <span class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full"></span>
+            @endif
+        </div>
+        <p class="text-[10px] font-black leading-normal tracking-[0.1em] uppercase">Folders</p>
+    </a>
 
     <button type="button" @click="$store.gallery.toggleFilter()"
         class="flex flex-1 flex-col items-center justify-center gap-1.5 {{ request()->routeIs('photos.index') && request()->hasAny(['location', 'department', 'date']) ? 'text-primary' : 'text-slate-400' }} hover:text-slate-600 transition-all">
@@ -52,4 +54,18 @@
         </div>
         <p class="text-[10px] font-black leading-normal tracking-[0.1em] uppercase">User</p>
     </a>
+
+    <!-- Floating Action Button (FAB) -->
+    <div class="fixed bottom-24 right-6 z-[60]">
+        <a href="{{ route('photos.create') }}"
+            class="flex items-center justify-center rounded-full size-16 bg-primary text-white shadow-[0_8px_32px_rgba(19,91,236,0.4)] hover:scale-110 active:scale-95 transition-all relative group group-hover:ring-8 ring-primary/20">
+            <svg class="size-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                    stroke-linejoin="round" />
+            </svg>
+            <div
+                class="absolute bottom-full right-0 mb-4 bg-slate-900 text-white text-[10px] font-bold py-1.5 px-4 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl">
+                UPLOAD DOCUMENTATION</div>
+        </a>
+    </div>
 </nav>

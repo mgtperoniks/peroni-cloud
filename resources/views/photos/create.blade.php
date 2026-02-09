@@ -36,7 +36,8 @@
                         class="flex min-w-[160px] items-center justify-center rounded-2xl h-14 px-8 bg-white dark:bg-slate-800 text-primary border border-primary/20 text-sm font-bold tracking-widest uppercase shadow-sm">
                         Select Files
                     </div>
-                    <input id="photos-input" name="photos[]" type="file" multiple class="hidden" accept="image/*" />
+                    <input id="photos-input" name="photos[]" type="file" multiple class="hidden"
+                        accept="image/jpeg,image/png,image/webp" />
                 </label>
             </div>
 
@@ -90,14 +91,123 @@
                     </select>
                 </div>
 
+                <!-- Folder Selection -->
+                <div class="flex flex-col gap-2" x-data="{ 
+                    showNewFolderModal: false, 
+                    newFolderName: '', 
+                    folders: @js($folders), 
+                    selectedFolder: @js(request('folder_id', '')),
+                    async createFolder() {
+                        if (!this.newFolderName) return;
+                        try {
+                            const response = await fetch('{{ route('folders.store') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({ name: this.newFolderName })
+                            });
+                            
+                            if (!response.ok) {
+                                const errorText = await response.text();
+                                console.error('Server error:', errorText);
+                                throw new Error('Server returned ' + response.status);
+                            }
+
+                            const data = await response.json();
+                            if (data.success) {
+                                this.folders.push(data.folder);
+                                this.selectedFolder = data.folder.id;
+                                this.showNewFolderModal = false;
+                                this.newFolderName = '';
+                            } else {
+                                alert('Error: ' + (data.message || 'Gagal membuat folder'));
+                            }
+                        } catch (e) {
+                            console.error('Folder Creation Error:', e);
+                            alert('Gagal membuat folder. Pastikan koneksi stabil atau coba gunakan menu Manage di samping.');
+                        }
+                    }
+                }">
+                    <div class="flex items-center justify-between px-2 pl-4">
+                        <p class="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">
+                            Documentation Folder</p>
+                        <div class="flex gap-4">
+                            <a href="{{ route('folders.index') }}" target="_blank"
+                                class="text-slate-400 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">settings</span>
+                                Manage
+                            </a>
+                            <button type="button" @click="showNewFolderModal = true"
+                                class="text-primary text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">add</span>
+                                New Folder
+                            </button>
+                        </div>
+                    </div>
+                    <select name="folder_id" x-model="selectedFolder"
+                        class="w-full rounded-2xl border-none bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-none h-16 px-6 font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 transition-all appearance-none">
+                        <option value="">No Folder (Uncategorized)</option>
+                        <template x-for="folder in folders" :key="folder.id">
+                            <option :value="folder.id" x-text="folder.name" :selected="folder.id == selectedFolder">
+                            </option>
+                        </template>
+                    </select>
+
+                    <!-- New Folder Modal -->
+                    <template x-teleport="body">
+                        <div x-show="showNewFolderModal"
+                            class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+                            x-cloak>
+                            <div @click.away="showNewFolderModal = false"
+                                class="bg-white dark:bg-slate-900 rounded-[32px] p-8 w-full max-w-sm shadow-2xl border border-slate-100 dark:border-slate-800">
+                                <h3 class="text-xl font-bold mb-6">Create New Folder</h3>
+                                <div class="space-y-4">
+                                    <input x-model="newFolderName" @keydown.enter.prevent="createFolder()" type="text"
+                                        placeholder="Folder name..."
+                                        class="w-full h-14 rounded-2xl border-none bg-slate-50 dark:bg-slate-800 px-6 font-medium focus:ring-2 focus:ring-primary/50 transition-all">
+                                    <div class="flex gap-3 pt-2">
+                                        <button type="button" @click="showNewFolderModal = false"
+                                            class="flex-1 h-12 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm">Cancel</button>
+                                        <button type="button" @click="createFolder()"
+                                            class="flex-[2] h-12 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20">Create
+                                            Folder</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
                 <!-- Department -->
-                <div class="flex flex-col gap-2">
+                <div class="flex flex-col gap-2" x-data="{ 
+                    role: '{{ auth()->user()->role }}',
+                    roleMap: {
+                        'adminppic': 'PPIC',
+                        'adminqcfitting': 'QC Fitting',
+                        'adminqcflange': 'QC Flange',
+                        'qcinspektorpd': 'QC Inspektor PD',
+                        'qcinspectorfl': 'QC Inspector FL',
+                        'admink3': 'K3',
+                        'sales': 'Sales',
+                        'adminsparepart': 'Sparepart',
+                        'mr': 'MR',
+                        'direktur': 'Direktur'
+                    },
+                    selectedDept: '',
+                    init() {
+                        this.selectedDept = this.roleMap[this.role] || '';
+                    }
+                }">
                     <p
                         class="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em] px-2 pl-4">
                         Department</p>
-                    <select name="department" required
-                        class="w-full rounded-2xl border-none bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-none h-16 px-6 font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 transition-all appearance-none">
-                        <option disabled selected value="">Select department</option>
+                    <select name="department" required x-model="selectedDept" {{ !in_array(auth()->user()->role, ['direktur', 'mr']) ? 'readonly style=pointer-events:none' : '' }}
+                        class="w-full rounded-2xl border-none bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-none h-16 px-6 font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 transition-all appearance-none {{ !in_array(auth()->user()->role, ['direktur', 'mr']) ? 'opacity-70 bg-slate-50' : '' }}">
+                        <option disabled value="">Select department</option>
                         <option value="PPIC">PPIC</option>
                         <option value="QC Fitting">QC Fitting</option>
                         <option value="QC Flange">QC Flange</option>
@@ -106,13 +216,13 @@
                         <option value="K3">K3</option>
                         <option value="Sales">Sales</option>
                         <option value="Sparepart">Sparepart</option>
-                        @if(auth()->user()->role == 'mr')
-                            <option value="MR">MR</option>
-                        @endif
-                        @if(auth()->user()->role == 'direktur')
-                            <option value="Direktur">Direktur</option>
-                        @endif
+                        <option value="MR">MR</option>
+                        <option value="Direktur">Direktur</option>
                     </select>
+                    @if(!in_array(auth()->user()->role, ['direktur', 'mr']))
+                        <p class="text-[9px] text-slate-400 px-4 font-bold uppercase tracking-wider italic">Locked to your
+                            department</p>
+                    @endif
                 </div>
 
                 <!-- Notes -->

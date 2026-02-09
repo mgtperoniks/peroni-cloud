@@ -11,7 +11,8 @@
                 <input type="date" name="jump_date" value="{{ request('jump_date') }}"
                     class="border-0 bg-transparent text-[10px] font-bold text-slate-700 dark:text-white focus:ring-0 p-1 w-28">
             </div>
-            <button type="submit" class="bg-primary text-white h-9 px-4 rounded-xl hover:bg-primary/90 transition-all text-[10px] font-black uppercase tracking-wider shadow-md shadow-primary/10 flex items-center gap-1.5">
+            <button type="submit"
+                class="bg-primary text-white h-9 px-4 rounded-xl hover:bg-primary/90 transition-all text-[10px] font-black uppercase tracking-wider shadow-md shadow-primary/10 flex items-center gap-1.5">
                 <span class="material-symbols-outlined text-base">search</span>
                 <span class="hidden sm:inline">Loncati</span>
             </button>
@@ -73,6 +74,11 @@
                                     <p
                                         class="text-[10px] items-center text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider flex gap-1">
                                         {{ $photo->department }}
+                                        @if($photo->folder && (auth()->id() == $photo->folder->user_id || in_array(auth()->user()->role, ['direktur', 'mr'])))
+                                            <div class="h-1 w-1 rounded-full bg-slate-200 dark:bg-slate-700 mx-2"></div>
+                                            <p class="text-primary text-[10px] font-black uppercase tracking-tighter">
+                                                {{ $photo->folder->name }}</p>
+                                        @endif
                                     </p>
                                 </div>
                             </div>

@@ -9,6 +9,8 @@
     <title>{{ config('app.name', 'Laravel') }}</title>
 
     <!-- Fonts -->
+    <link rel="preload" href="{{ asset('vendor/fonts/material-symbols/ms-400.ttf') }}" as="font" type="font/ttf"
+        crossorigin>
     <link rel="stylesheet" href="{{ asset('vendor/fonts/inter.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/fonts/material-symbols.css') }}">
 

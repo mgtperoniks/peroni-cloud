@@ -46,4 +46,35 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    /**
+     * Map of roles to departments.
+     */
+    public static $roleMap = [
+        'adminppic' => 'PPIC',
+        'adminqcfitting' => 'QC Fitting',
+        'adminqcflange' => 'QC Flange',
+        'qcinspektorpd' => 'QC Inspektor PD',
+        'qcinspectorfl' => 'QC Inspector FL',
+        'admink3' => 'K3',
+        'sales' => 'Sales',
+        'adminsparepart' => 'Sparepart',
+        'mr' => 'MR',
+        'direktur' => 'Direktur'
+    ];
+
+    /**
+     * Get the department associated with the user's role.
+     */
+    public function getDepartment(): ?string
+    {
+        return self::$roleMap[$this->role] ?? null;
+    }
+
+    /**
+     * Check if the user is a global administrator.
+     */
+    public function isGlobalAdmin(): bool
+    {
+        return in_array($this->role, ['direktur', 'mr']);
+    }
 }

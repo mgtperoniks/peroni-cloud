@@ -18,26 +18,9 @@ class PhotoController extends Controller
 
         $user = auth()->user();
 
-        // Role to Department Mapping
-        $roleMap = [
-            'adminppic' => 'PPIC',
-            'adminqcfitting' => 'QC Fitting',
-            'adminqcflange' => 'QC Flange',
-            'qcinspektorpd' => 'QC Inspektor PD',
-            'qcinspectorfl' => 'QC Inspector FL',
-            'admink3' => 'K3',
-            'sales' => 'Sales',
-            'adminsparepart' => 'Sparepart',
-        ];
-
         // Filter based on Role if not Global Admin
-        if (!in_array($user->role, ['direktur', 'mr'])) {
-            if (isset($roleMap[$user->role])) {
-                $query->where('department', $roleMap[$user->role]);
-            } else {
-                // strict fallback or allow seeing their own specific textual role
-                $query->where('department', $user->role);
-            }
+        if (!$user->isGlobalAdmin()) {
+            $query->where('department', $user->getDepartment() ?? $user->role);
         }
 
         if ($request->filled('location')) {
@@ -74,7 +57,7 @@ class PhotoController extends Controller
     {
         $folderQuery = Folder::orderBy('name');
 
-        if (!in_array(auth()->user()->role, ['direktur', 'mr'])) {
+        if (!auth()->user()->isGlobalAdmin()) {
             $folderQuery->where('user_id', auth()->id());
         }
 
@@ -100,11 +83,17 @@ class PhotoController extends Controller
 
         if ($request->folder_id) {
             $targetFolder = Folder::find($request->folder_id);
-            if (!in_array(auth()->user()->role, ['direktur', 'mr']) && $targetFolder->user_id !== auth()->id()) {
+            if (!auth()->user()->isGlobalAdmin() && $targetFolder->user_id !== auth()->id()) {
                 return redirect()->back()
                     ->withInput()
                     ->with('swal_error', 'Anda tidak memiliki akses ke folder yang dipilih.');
             }
+        }
+
+        // Enforce department for non-global admins
+        $department = $request->department;
+        if (!auth()->user()->isGlobalAdmin()) {
+            $department = auth()->user()->getDepartment() ?? $request->department;
         }
 
         if ($request->hasFile('photos')) {
@@ -130,7 +119,7 @@ class PhotoController extends Controller
                         'thumbnail' => $thumbnailPath,
                         'photo_date' => $request->photo_date,
                         'location' => $request->location,
-                        'department' => $request->department,
+                        'department' => $department,
                         'notes' => $request->notes,
                         'folder_id' => $request->folder_id,
                     ]);
@@ -157,36 +146,17 @@ class PhotoController extends Controller
         $user = auth()->user();
         $query = Photo::with(['user', 'folder']);
 
-        // Role to Department Mapping (Same as index)
-        $roleMap = [
-            'adminppic' => 'PPIC',
-            'adminqcfitting' => 'QC Fitting',
-            'adminqcflange' => 'QC Flange',
-            'qcinspektorpd' => 'QC Inspektor PD',
-            'qcinspectorfl' => 'QC Inspector FL',
-            'admink3' => 'K3',
-            'sales' => 'Sales',
-            'adminsparepart' => 'Sparepart',
-        ];
-
-        $applyScope = function ($q) use ($user, $roleMap) {
-            // Filter based on Role if not Global Admin
-            if (!in_array($user->role, ['direktur', 'mr'])) {
-                if (isset($roleMap[$user->role])) {
-                    $q->where('department', $roleMap[$user->role]);
-                } else {
-                    $q->where('department', $user->role);
-                }
-            }
-        };
-
-        $applyScope($query);
+        if (!$user->isGlobalAdmin()) {
+            $query->where('department', $user->getDepartment() ?? $user->role);
+        }
 
         // Date Jump Logic
         if ($request->filled('jump_date')) {
             // Check existence first
             $checkQuery = Photo::query();
-            $applyScope($checkQuery);
+            if (!$user->isGlobalAdmin()) {
+                $checkQuery->where('department', $user->getDepartment() ?? $user->role);
+            }
             $exists = $checkQuery->whereDate('photo_date', $request->jump_date)->exists();
 
             if ($exists) {
@@ -213,31 +183,12 @@ class PhotoController extends Controller
     {
         $user = auth()->user();
 
-        // Helper to apply role constraints
-        $applyScope = function ($query) use ($user) {
-            $roleMap = [
-                'adminppic' => 'PPIC',
-                'adminqcfitting' => 'QC Fitting',
-                'adminqcflange' => 'QC Flange',
-                'qcinspektorpd' => 'QC Inspektor PD',
-                'qcinspectorfl' => 'QC Inspector FL',
-                'admink3' => 'K3',
-                'sales' => 'Sales',
-                'adminsparepart' => 'Sparepart',
-            ];
-
-            if (!in_array($user->role, ['direktur', 'mr'])) {
-                if (isset($roleMap[$user->role])) {
-                    $query->where('department', $roleMap[$user->role]);
-                } else {
-                    $query->where('department', $user->role);
-                }
-            }
-        };
 
         // Previous Photo (Newer)
         $previous = Photo::query();
-        $applyScope($previous);
+        if (!$user->isGlobalAdmin()) {
+            $previous->where('department', $user->getDepartment() ?? $user->role);
+        }
         $previous = $previous->where(function ($q) use ($photo) {
             $q->where('photo_date', '>', $photo->photo_date)
                 ->orWhere(function ($sub) use ($photo) {
@@ -248,7 +199,9 @@ class PhotoController extends Controller
 
         // Next Photo (Older)
         $next = Photo::query();
-        $applyScope($next);
+        if (!$user->isGlobalAdmin()) {
+            $next->where('department', $user->getDepartment() ?? $user->role);
+        }
         $next = $next->where(function ($q) use ($photo) {
             $q->where('photo_date', '<', $photo->photo_date)
                 ->orWhere(function ($sub) use ($photo) {
@@ -258,7 +211,7 @@ class PhotoController extends Controller
         })->orderBy('photo_date', 'desc')->orderBy('created_at', 'desc')->first();
 
         $folderQuery = \App\Models\Folder::orderBy('name');
-        if (!in_array($user->role, ['direktur', 'mr'])) {
+        if (!$user->isGlobalAdmin()) {
             $folderQuery->where('user_id', auth()->id());
         }
         $folders = $folderQuery->get();
@@ -284,12 +237,24 @@ class PhotoController extends Controller
         // Security check for folder
         if ($request->folder_id) {
             $targetFolder = \App\Models\Folder::find($request->folder_id);
-            if (!in_array(auth()->user()->role, ['direktur', 'mr']) && $targetFolder->user_id !== auth()->id()) {
+            if (!auth()->user()->isGlobalAdmin() && $targetFolder->user_id !== auth()->id()) {
                 return redirect()->back()->with('swal_error', 'Anda tidak memiliki akses ke folder yang dipilih.');
             }
         }
 
-        $photo->update($request->only(['photo_date', 'location', 'department', 'folder_id', 'notes']));
+        // Enforce department for non-global admins
+        $department = $request->department;
+        if (!auth()->user()->isGlobalAdmin()) {
+            $department = auth()->user()->getDepartment() ?? $request->department;
+        }
+
+        $photo->update([
+            'photo_date' => $request->photo_date,
+            'location' => $request->location,
+            'department' => $department,
+            'folder_id' => $request->folder_id,
+            'notes' => $request->notes,
+        ]);
 
         return redirect()->back()->with('status', 'photo-updated');
     }

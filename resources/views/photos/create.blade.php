@@ -13,7 +13,7 @@
     </x-slot>
 
     <div class="flex flex-col flex-1 pb-40">
-        <form action="{{ route('photos.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('photos.store') }}" method="POST" enctype="multipart/form-data" autocomplete="off">
             @csrf
 
             <!-- EmptyState / Upload Area -->
@@ -205,21 +205,14 @@
                     <p
                         class="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em] px-2 pl-4">
                         Department</p>
-                    <select name="department" required x-model="selectedDept" {{ !in_array(auth()->user()->role, ['direktur', 'mr']) ? 'readonly style=pointer-events:none' : '' }}
-                        class="w-full rounded-2xl border-none bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-none h-16 px-6 font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 transition-all appearance-none {{ !in_array(auth()->user()->role, ['direktur', 'mr']) ? 'opacity-70 bg-slate-50' : '' }}">
+                    <select name="department" required x-model="selectedDept" {{ !auth()->user()->isGlobalAdmin() ? 'readonly style=pointer-events:none' : '' }}
+                        class="w-full rounded-2xl border-none bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-none h-16 px-6 font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 transition-all appearance-none {{ !auth()->user()->isGlobalAdmin() ? 'opacity-70 bg-slate-50' : '' }}">
                         <option disabled value="">Select department</option>
-                        <option value="PPIC">PPIC</option>
-                        <option value="QC Fitting">QC Fitting</option>
-                        <option value="QC Flange">QC Flange</option>
-                        <option value="QC Inspektor PD">QC Inspektor PD</option>
-                        <option value="QC Inspector FL">QC Inspector FL</option>
-                        <option value="K3">K3</option>
-                        <option value="Sales">Sales</option>
-                        <option value="Sparepart">Sparepart</option>
-                        <option value="MR">MR</option>
-                        <option value="Direktur">Direktur</option>
+                        @foreach(\App\Models\User::$roleMap as $role => $deptName)
+                            <option value="{{ $deptName }}" {{ auth()->user()->getDepartment() == $deptName ? 'selected' : '' }}>{{ $deptName }}</option>
+                        @endforeach
                     </select>
-                    @if(!in_array(auth()->user()->role, ['direktur', 'mr']))
+                    @if(!auth()->user()->isGlobalAdmin())
                         <p class="text-[9px] text-slate-400 px-4 font-bold uppercase tracking-wider italic">Locked to your
                             department</p>
                     @endif

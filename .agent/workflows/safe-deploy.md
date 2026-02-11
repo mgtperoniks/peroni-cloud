@@ -42,7 +42,7 @@ SSH ke server, lalu jalankan:
 cd /srv/docker/apps/peroni-cloud
 
 # Backup database sebelum pull
-sudo docker compose exec db mysqldump -u root -p[PASSWORD] peroni_cloud > ~/backups/peroni_backup_$(date +%Y%m%d_%H%M%S).sql
+sudo docker compose exec db mysqldump -u root -p[PASSWORD] peroni_cloud > ~/backups/peroni-cloud/peroni_backup_$(date +%Y%m%d_%H%M%S).sql
 ```
 
 ### STEP 3: Pull & Update di Server
@@ -100,7 +100,7 @@ php artisan db:wipe
 
 ```bash
 # Restore database dari backup
-sudo docker compose exec -T db mysql -u root -p[PASSWORD] peroni_cloud < ~/backups/peroni_backup_YYYYMMDD_HHMMSS.sql
+sudo docker compose exec -T db mysql -u root -p[PASSWORD] peroni_cloud < ~/backups/peroni-cloud/peroni_backup_YYYYMMDD_HHMMSS.sql
 
 # Rollback ke commit sebelumnya (gunakan dengan hati-hati)
 sudo git reset --hard HEAD~1

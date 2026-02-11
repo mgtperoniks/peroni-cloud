@@ -77,7 +77,7 @@ ssh peroniks@10.88.8.46
 cd /srv/docker/apps/peroni-cloud
 
 # 3. BACKUP database SEBELUM update (WAJIB!)
-docker exec peroni_cloud_db mysqldump -u root -p[PASSWORD] peroni_cloud > ~/backup_before_update_$(date +%Y%m%d_%H%M%S).sql
+docker exec peroni_cloud_db mysqldump -u root -p[PASSWORD] peroni_cloud > ~/backups/peroni-cloud/backup_before_update_$(date +%Y%m%d_%H%M%S).sql
 
 # 4. Pull code terbaru
 git pull origin main
